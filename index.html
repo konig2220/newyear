@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bonne Année 2026 🎉</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg1:#0b0f1a;
+      --bg2:#111a2b;
+      --accent:#ffcc00;
+      --neon1:#00e5ff;
+      --neon2:#ff3b8d;
+      --neon3:#8cff66;
+      --white:#f7f7f7;
+    }
+
+    /* Reset & layout */
+    *{box-sizing:border-box}
+    html,body{
+      margin:0; padding:0; height:100%; background: radial-gradient(1200px at 50% 20%, var(--bg2), var(--bg1));
+      color:var(--white); font-family:Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      overflow:hidden;
+    }
+    .app{
+      position:relative; width:100%; height:100%;
+      display:flex; align-items:center; justify-content:center; flex-direction:column;
+    }
+
+    /* Canvas layers */
+    canvas#fireworks, canvas#confetti{
+      position:fixed; inset:0; width:100%; height:100%; pointer-events:none;
+    }
+    canvas#fireworks{ z-index:1; }
+    canvas#confetti{ z-index:2; }
+
+    /* Starfield background */
+    .stars{
+      position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
+    }
+    .star{
+      position:absolute; width:2px; height:2px; background:rgba(255,255,255,0.9);
+      border-radius:50%; filter:drop-shadow(0 0 6px rgba(255,255,255,0.8));
+      animation: twinkle 2.5s infinite ease-in-out;
+    }
+    @keyframes twinkle{
+      0%,100%{ opacity:0.2; transform:scale(0.8) }
+      50%{ opacity:1; transform:scale(1.4) }
+    }
+
+    /* Countdown intro */
+    .countdown{
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      font-family:Montserrat, Poppins, sans-serif; font-weight:700; letter-spacing:2px;
+      font-size: clamp(2rem, 8vw, 8rem); color:#fff; z-index:3;
+      text-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.3);
+      opacity:0; animation: fadeIn 0.4s forwards;
+    }
+    @keyframes fadeIn{ to{ opacity:1 } }
+    @keyframes fadeOut{ to{ opacity:0 } }
+
+    /* Title neon */
+    .title{
+      position:relative; z-index:4; text-align:center; margin-top:2vh;
+    }
+    .title h1{
+      margin:0; font-family:Montserrat, Poppins, sans-serif; font-weight:700;
+      font-size: clamp(2rem, 7vw, 7rem);
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, var(--neon1), var(--neon2), var(--neon3));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      filter: drop-shadow(0 0 12px rgba(0,229,255,0.6)) drop-shadow(0 0 24px rgba(255,59,141,0.4));
+      animation: hueShift 6s linear infinite;
+    }
+    @keyframes hueShift{
+      0%{ filter: drop-shadow(0 0 12px rgba(0,229,255,0.6)) drop-shadow(0 0 24px rgba(255,59,141,0.4)) }
+      50%{ filter: drop-shadow(0 0 12px rgba(255,59,141,0.6)) drop-shadow(0 0 24px rgba(140,255,102,0.4)) }
+      100%{ filter: drop-shadow(0 0 12px rgba(0,229,255,0.6)) drop-shadow(0 0 24px rgba(255,59,141,0.4)) }
+    }
+
+    .subtitle{
+      margin-top:10px; font-size: clamp(1rem, 2.8vw, 2rem);
+      color:#dfe7ff; opacity:0.9;
+    }
+
+    /* Glow rings */
+    .rings{
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:3;
+    }
+    .ring{
+      position:absolute; border:2px solid rgba(255,255,255,0.08); border-radius:50%;
+      animation: pulse 6s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.06));
+    }
+    .ring.r1{ width:50vmin; height:50vmin }
+    .ring.r2{ width:70vmin; height:70vmin; animation-delay:1s }
+    .ring.r3{ width:90vmin; height:90vmin; animation-delay:2s }
+    @keyframes pulse{
+      0%,100%{ transform:scale(0.98); opacity:0.5 }
+      50%{ transform:scale(1.02); opacity:1 }
+    }
+
+    /* CTA controls */
+    .controls{
+      position:fixed; bottom:3vh; left:50%; transform:translateX(-50%);
+      display:flex; gap:12px; z-index:5; flex-wrap:wrap; justify-content:center;
+    }
+    .btn{
+      background: linear-gradient(135deg, #1f2a44, #2b3a5f);
+      color:#fff; border:none; padding:12px 18px; border-radius:12px;
+      font-weight:700; letter-spacing:0.5px; cursor:pointer;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.35), inset 0 0 12px rgba(255,255,255,0.06);
+      transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .btn:hover{ transform:translateY(-2px); filter:brightness(1.1) }
+    .btn:active{ transform:translateY(1px) }
+
+    .credit{
+      position:fixed; top:1.2vh; right:1.2vh; z-index:5; font-size:.9rem; opacity:.7;
+    }
+    .credit a{ color:#9fd3ff; text-decoration:none }
+    .credit a:hover{ text-decoration:underline }
+
+    /* Floating emojis */
+    .float-emoji{
+      position:fixed; font-size: clamp(1.2rem, 3vw, 2.2rem); z-index:4; pointer-events:none;
+      animation: floatUp 4.5s ease-in forwards;
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.4));
+    }
+    @keyframes floatUp{
+      0%{ transform:translateY(20px); opacity:0 }
+      10%{ opacity:1 }
+      100%{ transform:translateY(-120vh); opacity:0 }
+    }
+
+    /* Music toggle */
+    .toggle{
+      display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.06);
+      padding:10px 14px; border-radius:12px; backdrop-filter: blur(6px);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+    .toggle input{ accent-color:#7fd1ff; width:18px; height:18px }
+
+    /* Responsive safe area */
+    @media (max-width:480px){
+      .subtitle{ margin: 6px 16px; text-align:center }
+      .credit{ font-size:.8rem }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fireworks"></canvas>
+  <canvas id="confetti"></canvas>
+
+  <div class="stars" id="stars"></div>
+
+  <div class="app">
+    <div class="rings">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+    </div>
+
+    <div class="title" id="title" aria-live="polite" aria-label="Bonne Année 2026">
+      <h1>Bonne Année <span id="year">2026</span> 🎆</h1>
+      <div class="subtitle">Santé, réussite et joie—que tes projets brillent comme des feux d’artifice ✨</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="replay">Rejouer les effets 🎉</button>
+      <div class="toggle">
+        <input type="checkbox" id="musicToggle" />
+        <label for="musicToggle">Musique festive</label>
+      </div>
+    </div>
+
+    <div class="credit">
+      Fait avec ❤️ pour la nouvelle année
+    </div>
+  </div>
+
+  <!-- Audio libre (courte boucle douce) -->
+  <audio id="music" loop>
+    <!-- Vous pouvez remplacer par votre propre fichier local si besoin -->
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2f3b4b1f3a.mp3?filename=new-year-ambient-13890.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // ===== Utilitaires =====
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const rand = (min, max) => Math.random() * (max - min) + min;
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+    // ===== Compte à rebours d’entrée =====
+    const showCountdown = async (textList = ["3","2","1","Bonne Année !"]) => {
+      for(const t of textList){
+        const el = document.createElement('div');
+        el.className = 'countdown';
+        el.textContent = t;
+        document.body.appendChild(el);
+        await new Promise(r => setTimeout(r, 600));
+        el.style.animation = 'fadeOut .35s forwards';
+        await new Promise(r => setTimeout(r, 350));
+        el.remove();
+      }
+    };
+
+    // ===== Étoiles scintillantes =====
+    const starsContainer = document.getElementById('stars');
+    const makeStars = () => {
+      starsContainer.innerHTML = '';
+      const count = Math.floor(window.innerWidth * window.innerHeight / 9000); // densité adaptative
+      for(let i=0;i<count;i++){
+        const s = document.createElement('div');
+        s.className = 'star';
+        s.style.left = rand(0,100) + 'vw';
+        s.style.top = rand(0,100) + 'vh';
+        s.style.animationDelay = rand(0,2.5) + 's';
+        s.style.opacity = rand(0.3,1);
+        starsContainer.appendChild(s);
+      }
+    };
+    makeStars();
+    window.addEventListener('resize', makeStars);
+
+    // ===== Canvas setup =====
+    const fwCanvas = document.getElementById('fireworks');
+    const cfCanvas = document.getElementById('confetti');
+    const fwCtx = fwCanvas.getContext('2d');
+    const cfCtx = cfCanvas.getContext('2d');
+
+    const resizeCanvas = () => {
+      fwCanvas.width = window.innerWidth;
+      fwCanvas.height = window.innerHeight;
+      cfCanvas.width = window.innerWidth;
+      cfCanvas.height = window.innerHeight;
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // ===== Feux d’artifice =====
+    const fireworks = [];
+    const particles = [];
+
+    class Firework {
+      constructor(){
+        this.x = rand(0.1*fwCanvas.width, 0.9*fwCanvas.width);
+        this.y = fwCanvas.height;
+        this.tx = rand(0.2*fwCanvas.width, 0.8*fwCanvas.width);
+        this.ty = rand(0.15*fwCanvas.height, 0.45*fwCanvas.height);
+        this.speed = rand(6,9);
+        this.angle = Math.atan2(this.ty - this.y, this.tx - this.x);
+        this.vx = Math.cos(this.angle) * this.speed;
+        this.vy = Math.sin(this.angle) * this.speed;
+        this.color = pick(['#00e5ff','#ff3b8d','#8cff66','#ffd166','#9d4edd','#f72585']);
+        this.alive = true;
+        this.trail = [];
+      }
+      update(){
+        this.trail.push({x:this.x,y:this.y});
+        if(this.trail.length>8) this.trail.shift();
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.08; // gravité légère
+        if(Math.hypot(this.x - this.tx, this.y - this.ty) < 10 || this.vy > 2){
+          this.explode();
+          this.alive = false;
+        }
+      }
+      explode(){
+        const count = Math.floor(rand(60,100));
+        for(let i=0;i<count;i++){
+          particles.push(new Particle(this.tx, this.ty, this.color));
+        }
+        // flash
+        fwCtx.save();
+        fwCtx.fillStyle = 'rgba(255,255,255,0.15)';
+        fwCtx.fillRect(0,0,fwCanvas.width,fwCanvas.height);
+        fwCtx.restore();
+      }
+      draw(ctx){
+        ctx.save();
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for(let i=0;i<this.trail.length;i++){
+          const p = this.trail[i];
+          if(i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    class Particle {
+      constructor(x,y,color){
+        this.x = x; this.y = y;
+        const angle = rand(0, Math.PI*2);
+        const speed = rand(2, 7);
+        this.vx = Math.cos(angle)*speed;
+        this.vy = Math.sin(angle)*speed;
+        this.alpha = 1;
+        this.decay = rand(0.01, 0.03);
+        this.color = color;
+        this.size = rand(1,3);
+      }
+      update(){
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.05; // gravité
+        this.alpha -= this.decay;
+      }
+      draw(ctx){
+        ctx.save();
+        ctx.globalAlpha = clamp(this.alpha,0,1);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // ===== Confettis =====
+    const confettis = [];
+    class Confetti {
+      constructor(){
+        this.x = rand(0, cfCanvas.width);
+        this.y = rand(-50, -10);
+        this.size = rand(6, 12);
+        this.speed = rand(1.2, 2.6);
+        this.swing = rand(0.8, 2.2);
+        this.angle = rand(0, Math.PI*2);
+        this.color = pick(['#ff3b8d','#ffd166','#06d6a0','#118ab2','#8338ec','#ef476f','#00e5ff','#8cff66']);
+        this.shape = Math.random() < 0.5 ? 'rect' : 'circle';
+      }
+      update(){
+        this.y += this.speed;
+        this.x += Math.sin(this.angle) * this.swing;
+        this.angle += 0.02;
+        if(this.y > cfCanvas.height + 20){
+          this.y = rand(-80, -20);
+          this.x = rand(0, cfCanvas.width);
+        }
+      }
+      draw(ctx){
+        ctx.save();
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        if(this.shape==='rect'){
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.angle);
+          ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+        } else {
+          ctx.arc(this.x, this.y, this.size/2, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    const spawnConfetti = (n=160) => {
+      confettis.length = 0;
+      for(let i=0;i<n;i++) confettis.push(new Confetti());
+    };
+
+    // ===== Boucle d’animation =====
+    let lastTime = 0;
+    const loop = (t=0) => {
+      const dt = t - lastTime; lastTime = t;
+
+      // Fireworks
+      fwCtx.clearRect(0,0,fwCanvas.width,fwCanvas.height);
+      if(Math.random() < 0.04) fireworks.push(new Firework());
+      for(let i=fireworks.length-1;i>=0;i--){
+        const f = fireworks[i];
+        f.update(); f.draw(fwCtx);
+        if(!f.alive) fireworks.splice(i,1);
+      }
+      for(let i=particles.length-1;i>=0;i--){
+        const p = particles[i];
+        p.update(); p.draw(fwCtx);
+        if(p.alpha <= 0) particles.splice(i,1);
+      }
+
+      // Confetti
+      cfCtx.clearRect(0,0,cfCanvas.width,cfCanvas.height);
+      for(const c of confettis){ c.update(); c.draw(cfCtx); }
+
+      requestAnimationFrame(loop);
+    };
+
+    // ===== Emojis flottants =====
+    const emojis = ['🎉','🎊','✨','🎆','🥳','💫','🌟','🍾','🎇'];
+    const spawnEmoji = () => {
+      const e = document.createElement('div');
+      e.className = 'float-emoji';
+      e.textContent = pick(emojis);
+      e.style.left = rand(5,95) + 'vw';
+      e.style.bottom = '-10vh';
+      document.body.appendChild(e);
+      setTimeout(()=> e.remove(), 4500);
+    };
+
+    // ===== Contrôles =====
+    const replayBtn = document.getElementById('replay');
+    const musicToggle = document.getElementById('musicToggle');
+    const music = document.getElementById('music');
+
+    let emojiTimer = null;
+    const startShow = async () => {
+      await showCountdown();
+      spawnConfetti(180);
+      loop();
+      if(emojiTimer) clearInterval(emojiTimer);
+      emojiTimer = setInterval(spawnEmoji, 600);
+      // Burst initial
+      for(let i=0;i<6;i++) fireworks.push(new Firework());
+    };
+
+    replayBtn.addEventListener('click', () => {
+      // Reset soft
+      fireworks.length = 0; particles.length = 0;
+      spawnConfetti(180);
+      for(let i=0;i<6;i++) fireworks.push(new Firework());
+    });
+
+    musicToggle.addEventListener('change', (e) => {
+      if(e.target.checked){
+        music.volume = 0.6;
+        music.play().catch(()=>{ /* autoplay may be blocked until user interaction */ });
+      } else {
+        music.pause();
+      }
+    });
+
+    // Démarrage
+    startShow();
+
+    // Accessibilité: focus sur bouton
+    setTimeout(()=> replayBtn.focus(), 4000);
+  </script>
+</body>
+</html>
