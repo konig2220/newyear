@@ -6,9 +6,16 @@
   <style>
     body {
       margin:0; padding:0;
-      background: radial-gradient(circle at center, #0b0f1a, #000);
+      background: linear-gradient(270deg, #0b0f1a, #1a0933, #33091a, #0b0f1a);
+      background-size: 800% 800%;
+      animation: skyShift 25s ease infinite;
       overflow:hidden; color:#fff;
       font-family: 'Poppins', sans-serif;
+    }
+    @keyframes skyShift {
+      0% { background-position:0% 50%; }
+      50% { background-position:100% 50%; }
+      100% { background-position:0% 50%; }
     }
 
     h1 {
@@ -19,6 +26,17 @@
       text-transform: uppercase;
       color: #fff;
       animation: neonPulse 2s infinite, glitch 1s infinite;
+    }
+    h1::before {
+      content:"";
+      position:absolute;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width:140%; height:140%;
+      background: radial-gradient(circle, rgba(255,255,200,0.25) 0%, transparent 70%);
+      border-radius:50%;
+      z-index:-1;
+      animation: haloPulse 6s ease-in-out infinite;
     }
     @keyframes neonPulse {
       0%,100% { text-shadow: 0 0 10px #ff3b8d, 0 0 20px #00e5ff; }
@@ -32,159 +50,95 @@
       80% { transform: translate(-52%,-2px); }
       100% { transform: translate(-50%,0); }
     }
-
-    .controls {
-      position: absolute;
-      bottom: 20px; left: 50%;
-      transform: translateX(-50%);
-      display:flex; gap:10px;
+    @keyframes haloPulse {
+      0%,100% { opacity:0.4; transform:translate(-50%,-50%) scale(1); }
+      50% { opacity:0.8; transform:translate(-50%,-50%) scale(1.2); }
     }
-    button {
-      padding: 10px 20px;
-      border:none; border-radius:8px;
-      background: linear-gradient(135deg,#1f2a44,#2b3a5f);
-      color:#fff; font-weight:bold;
-      cursor:pointer;
+
+    /* Particules lumineuses */
+    .particle {
+      position:fixed;
+      width:4px; height:4px;
+      background:rgba(255,255,255,0.8);
+      border-radius:50%;
+      animation: float 10s infinite ease-in-out;
     }
-    button:hover { filter:brightness(1.2); }
-
-    canvas { position:fixed; top:0; left:0; width:100%; height:100%; }
-
-    /* Prière */
     .priere {
-      position:absolute;
-      bottom: 15%; left:50%;
-      transform:translateX(-50%);
-      width:80%; max-width:800px;
-      text-align:center;
-      font-size:1.5rem;
-      line-height:1.8;
-      color:#ffd166;
-      text-shadow:0 0 10px rgba(255,255,255,0.6);
-      opacity:0;
-      transition: opacity 2s ease;
+  position:absolute;
+  bottom: 15%; left:50%;
+  transform:translateX(-50%);
+  width:80%; max-width:800px;
+  text-align:center;
+  font-size:1.5rem;
+  line-height:1.8;
+  color:#ffd166;
+  text-shadow:0 0 15px rgba(255,255,200,0.8), 0 0 30px rgba(255,255,255,0.4);
+  opacity:0;
+  transition: opacity 2s ease, transform 2s ease;
+}
+.priere.show {
+  opacity:1;
+  transform:translateX(-50%) translateY(-20px);
+  animation: pulseText 6s infinite ease-in-out;
+}
+@keyframes pulseText {
+  0%,100% { text-shadow:0 0 15px rgba(255,255,200,0.8), 0 0 30px rgba(255,255,255,0.4); }
+  50% { text-shadow:0 0 25px rgba(255,255,255,1), 0 0 50px rgba(255,255,200,0.8); }
+}
+
+    @keyframes float {
+      0% { transform:translateY(0); opacity:0.3; }
+      50% { transform:translateY(-50px); opacity:1; }
+      100% { transform:translateY(0); opacity:0.3; }
     }
-    .priere.show { opacity:1; }
+
+    /* Étoiles filantes */
+    .starfall {
+      position:fixed;
+      width:2px; height:80px;
+      background:linear-gradient(to bottom, white, transparent);
+      top:-100px;
+      animation: fall 3s linear forwards;
+    }
+    @keyframes fall {
+      from { transform:translateX(0) translateY(0) rotate(45deg); opacity:1; }
+      to { transform:translateX(400px) translateY(800px) rotate(45deg); opacity:0; }
+    }
   </style>
 </head>
 <body>
   <h1>Bonne Année 2026 🎆</h1>
-  <canvas id="fireworks"></canvas>
-  <canvas id="confetti"></canvas>
 
-  <div class="controls">
-    <button id="replay">Rejouer 🎉</button>
-    <button id="turbo">🚀 Mode Turbo</button>
-    <button id="showPrayer">🙏 Afficher la prière</button>
-  </div>
-
-  <div class="priere" id="priere">
-    Seigneur Tout-Puissant,<br>
-    Merci pour l’année écoulée, pour la vie, la santé et les bénédictions reçues.<br>
-    Nous remettons 2026 entre Tes mains, qu’elle soit remplie de paix, de joie et de réussite.<br>
-    Guide nos pas et fais briller Ta lumière sur nos projets.<br>
-    Amen.
-  </div>
-
-<script>
-const fwCanvas = document.getElementById('fireworks');
-const cfCanvas = document.getElementById('confetti');
-const fwCtx = fwCanvas.getContext('2d');
-const cfCtx = cfCanvas.getContext('2d');
-fwCanvas.width = innerWidth; fwCanvas.height = innerHeight;
-cfCanvas.width = innerWidth; cfCanvas.height = innerHeight;
-
-const fireworks=[], particles=[], confettis=[];
-
-function rand(min,max){return Math.random()*(max-min)+min;}
-function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
-
-/* Fireworks */
-class Firework{
-  constructor(){
-    this.x=rand(0.2*fwCanvas.width,0.8*fwCanvas.width);
-    this.y=fwCanvas.height;
-    this.tx=rand(0.2*fwCanvas.width,0.8*fwCanvas.width);
-    this.ty=rand(0.2*fwCanvas.height,0.5*fwCanvas.height);
-    this.vx=(this.tx-this.x)/30;
-    this.vy=(this.ty-this.y)/30;
-    this.color=pick(['#ff3b8d','#00e5ff','#8cff66','#ffd166','#f72585']);
-    this.alive=true;
-  }
-  update(){
-    this.x+=this.vx; this.y+=this.vy;
-    if(Math.abs(this.x-this.tx)<5 && Math.abs(this.y-this.ty)<5){
-      this.explode(); this.alive=false;
+  <script>
+    // Particules lumineuses
+    function rand(min,max){return Math.random()*(max-min)+min;}
+    function spawnParticles(){
+      for(let i=0;i<50;i++){
+        const p=document.createElement('div');
+        p.className='particle';
+        p.style.left=rand(0,window.innerWidth)+'px';
+        p.style.top=rand(0,window.innerHeight)+'px';
+        p.style.animationDelay=rand(0,10)+'s';
+        document.body.appendChild(p);
+      }
     }
-  }
-  explode(){
-    for(let i=0;i<80;i++) particles.push(new Particle(this.tx,this.ty,this.color));
-  }
-  draw(){
-    fwCtx.fillStyle=this.color;
-    fwCtx.fillRect(this.x,this.y,2,2);
-  }
-}
-class Particle{
-  constructor(x,y,color){
-    this.x=x; this.y=y; this.color=color;
-    this.vx=rand(-3,3); this.vy=rand(-3,3);
-    this.alpha=1;
-  }
-  update(){this.x+=this.vx; this.y+=this.vy; this.alpha-=0.02;}
-  draw(){
-    fwCtx.globalAlpha=this.alpha;
-    fwCtx.fillStyle=this.color;
-    fwCtx.fillRect(this.x,this.y,2,2);
-    fwCtx.globalAlpha=1;
-  }
-}
-
-/* Confetti */
-class Confetti{
-  constructor(){
-    this.x=rand(0,cfCanvas.width);
-    this.y=rand(-50,-10);
-    this.size=rand(6,12);
-    this.color=pick(['#ff3b8d','#ffd166','#06d6a0','#118ab2','#8338ec','#ef476f']);
-    this.vy=rand(1,3);
-    this.angle=rand(0,Math.PI*2);
-  }
-  update(){this.y+=this.vy; this.x+=Math.sin(this.angle); this.angle+=0.02;
-    if(this.y>cfCanvas.height) this.y=rand(-50,-10);
-  }
-  draw(){
-    cfCtx.fillStyle=this.color;
-    cfCtx.fillRect(this.x,this.y,this.size,this.size);
-  }
-}
-function spawnConfetti(n=150){confettis.length=0; for(let i=0;i<n;i++) confettis.push(new Confetti());}
-
-/* Loop */
-function loop(){
-  fwCtx.clearRect(0,0,fwCanvas.width,fwCanvas.height);
-  cfCtx.clearRect(0,0,cfCanvas.width,cfCanvas.height);
-  if(Math.random()<0.03) fireworks.push(new Firework());
-  fireworks.forEach((f,i)=>{f.update();f.draw();if(!f.alive)fireworks.splice(i,1);});
-  particles.forEach((p,i)=>{p.update();p.draw();if(p.alpha<=0)particles.splice(i,1);});
-  confettis.forEach(c=>{c.update();c.draw();});
-  requestAnimationFrame(loop);
-}
-spawnConfetti(); loop();
-
-/* Controls */
-document.getElementById('replay').onclick=()=>{fireworks.length=0;particles.length=0;spawnConfetti();};
-document.getElementById('turbo').onclick=()=>{
-  for(let i=0;i<10;i++) fireworks.push(new Firework());
-  spawnConfetti(400);
-};
-
-/* Prière */
-const priere=document.getElementById('priere');
+    const priere=document.getElementById('priere');
 document.getElementById('showPrayer').onclick=()=>{priere.classList.add('show');};
 
 // Affichage automatique après 10 secondes
 setTimeout(()=>{priere.classList.add('show');},10000);
-</script>
+
+    spawnParticles();
+
+    // Étoiles filantes
+    function spawnStarfall(){
+      const star=document.createElement('div');
+      star.className='starfall';
+      star.style.left=rand(0,window.innerWidth)+'px';
+      document.body.appendChild(star);
+      setTimeout(()=>star.remove(),3000);
+    }
+    setInterval(spawnStarfall,5000);
+  </script>
 </body>
 </html>
